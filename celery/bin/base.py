@@ -79,7 +79,10 @@ import json
 
 from collections import defaultdict
 from heapq import heappush
-from inspect import getargspec
+try:
+    from inspect import getfullargspec as getargspec
+except ImportError:  # Python < 3.0
+    from inspect import getargspec
 from optparse import OptionParser, IndentedHelpFormatter, make_option as Option
 from pprint import pformat
 
