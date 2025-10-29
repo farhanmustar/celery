@@ -11,7 +11,8 @@ from __future__ import absolute_import, print_function, unicode_literals
 import sys
 import time
 
-from collections import defaultdict, Mapping, MutableMapping, MutableSet
+from collections import defaultdict
+from collections.abc import Mapping, MutableMapping, MutableSet
 from heapq import heapify, heappush, heappop
 from functools import partial
 from itertools import chain

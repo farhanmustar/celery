@@ -17,7 +17,7 @@ import traceback
 import warnings
 import datetime
 
-from collections import Callable
+from collections.abc import Callable
 from functools import partial, wraps
 from inspect import getargspec
 from pprint import pprint
