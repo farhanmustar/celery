@@ -3,14 +3,12 @@
 
 try:
     from setuptools import setup, find_packages
-    from setuptools.command.test import test
     is_setuptools = True
 except ImportError:
     raise
     from ez_setup import use_setuptools
     use_setuptools()
     from setuptools import setup, find_packages           # noqa
-    from setuptools.command.test import test              # noqa
     is_setuptools = False
 
 import os
@@ -31,22 +29,24 @@ for path in (os.path.curdir, os.getcwd()):
     if path in sys.path:
         sys.path.remove(path)
 try:
-    import imp
+    import importlib.util
     import shutil
     for pkg in downgrade_packages:
         try:
             parent, module = pkg.rsplit('.', 1)
             print('- Trying to upgrade %r in %r' % (module, parent))
             parent_mod = __import__(parent, None, None, [parent])
-            _, mod_path, _ = imp.find_module(module, parent_mod.__path__)
-            if mod_path.endswith('/' + module):
-                print('- force upgrading previous installation')
-                print('  - removing {0!r} package...'.format(mod_path))
-                try:
-                    shutil.rmtree(os.path.abspath(mod_path))
-                except Exception:
-                    sys.stderr.write('Could not remove {0!r}: {1!r}\n'.format(
-                        mod_path, sys.exc_info[1]))
+            spec = importlib.util.find_spec(module, parent_mod.__path__)
+            if spec and spec.origin:
+                mod_path = os.path.dirname(spec.origin)
+                if mod_path.endswith('/' + module):
+                    print('- force upgrading previous installation')
+                    print('  - removing {0!r} package...'.format(mod_path))
+                    try:
+                        shutil.rmtree(os.path.abspath(mod_path))
+                    except Exception:
+                        sys.stderr.write('Could not remove {0!r}: {1!r}\n'.format(
+                            mod_path, sys.exc_info[1]))
         except ImportError:
             print('- upgrade %s: no old version found.' % module)
 except:
@@ -194,8 +194,6 @@ setup(
     packages=find_packages(exclude=['ez_setup', 'tests', 'tests.*']),
     zip_safe=False,
     install_requires=install_requires,
-    tests_require=tests_require,
-    test_suite='nose.collector',
     classifiers=classifiers,
     entry_points=entrypoints,
     long_description=long_description,
