@@ -33,9 +33,49 @@ Use ``.. autotask::`` to manually document a task.
 from __future__ import absolute_import
 
 try:
-    from inspect import formatargspec, getfullargspec as getargspec
+    from inspect import getfullargspec as getargspec
 except ImportError:  # Py2
-    from inspect import formatargspec, getargspec  # noqa
+    from inspect import getargspec  # noqa
+
+# formatargspec was removed in Python 3.11
+try:
+    from inspect import formatargspec
+except ImportError:
+    # Implement a simple formatargspec for Python 3.11+
+    def formatargspec(args, varargs=None, varkw=None, defaults=None,
+                      kwonlyargs=(), kwonlydefaults=None, annotations=None):
+        """Format an argument spec from the values returned by getfullargspec.
+
+        This is a simplified implementation for Python 3.11+ compatibility.
+        """
+        specs = []
+        if defaults:
+            firstdefault = len(args) - len(defaults)
+        else:
+            firstdefault = -1
+
+        for i, arg in enumerate(args):
+            spec = arg
+            if defaults and i >= firstdefault:
+                spec = arg + '=' + repr(defaults[i - firstdefault])
+            specs.append(spec)
+
+        if varargs:
+            specs.append('*' + varargs)
+        elif kwonlyargs:
+            specs.append('*')
+
+        if kwonlyargs:
+            for kw in kwonlyargs:
+                spec = kw
+                if kwonlydefaults and kw in kwonlydefaults:
+                    spec += '=' + repr(kwonlydefaults[kw])
+                specs.append(spec)
+
+        if varkw:
+            specs.append('**' + varkw)
+
+        return '(' + ', '.join(specs) + ')'
 
 from sphinx.domains.python import PyModulelevel
 from sphinx.ext.autodoc import FunctionDocumenter
